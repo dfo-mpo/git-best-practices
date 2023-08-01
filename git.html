@@ -1,0 +1,154 @@
+<html xmlns:mso="urn:schemas-microsoft-com:office:office" xmlns:msdt="uuid:C2F41010-65B3-11d1-A29F-00AA00C14882">
+
+<head>
+<style>
+body {
+	font-family: sans-serif;
+	line-height: 1.5em;
+	margin: 2em 5% 2em 5%;
+}
+
+h1, h2 {
+	text-align: center;
+}
+
+h2 {
+	margin-top: 2em;
+}
+
+code {
+	background: #ccc;
+	padding: 0.25em;
+	border-radius: 8px;
+}
+
+img {
+	display: block;
+	margin: 0 auto 0 auto;
+}
+
+a, a:visited {
+	color: black;
+}
+
+a:hover {
+	text-decoration: none;
+
+}
+
+.note, .bestpractice {
+	border: 1px solid black;
+	border-radius: 8px;
+	padding: 1em;
+}
+
+.note {
+	background: #ddf;
+}
+
+.bestpractice {
+	background: #dfd;
+}
+</style>
+
+
+<!--[if gte mso 9]><xml>
+<mso:CustomDocumentProperties>
+<mso:_dlc_DocId msdt:dt="string">PSSI-1140080413-22031</mso:_dlc_DocId>
+<mso:_dlc_DocIdItemGuid msdt:dt="string">da967af2-6b67-4cb3-bc26-79a3bb93b33e</mso:_dlc_DocIdItemGuid>
+<mso:_dlc_DocIdUrl msdt:dt="string">https://086gc.sharepoint.com/sites/PacificSalmonTeam/_layouts/15/DocIdRedir.aspx?ID=PSSI-1140080413-22031, PSSI-1140080413-22031</mso:_dlc_DocIdUrl>
+</mso:CustomDocumentProperties>
+</xml><![endif]-->
+</head>
+
+<body>
+<h1>Git Explained & Best Practices</h1>
+<p>This page provides an explanation of how Git works and how to use it, as well as some notes about its use and best practices.</p>
+<ol>
+<li><a href="#repositories">Repositories</a></li>
+<li><a href="#commits">Commits</a></li>
+<li><a href="#branches">Branches</a></li>
+<li><a href="#merging">Merging</a></li>
+<li><a href="#remotes">Remotes</a></li>
+<li><a href="#advanced-usage">Advanced usage</a></li>
+<li><a href="#glossary">Glossary</a></li>
+</ol>
+
+<h2 id="repositories">Repositories</h2>
+<p>A repository in Git is extremely simple: a collection of Git objects. Every object is referred to using a unique ID (called a hash), and can represent different things, which are explained below. You can create a new empty repository using <code>git init &lt;path to repo&gt;</code>, or clone a remote repo as described in the <a href="#remotes">Remotes</a> section.</p>
+<p class="note">Note: You can actually see these objects yourself in <code>&lt;repo path&gt;/.git/objects/</code>. They aren't in human readable format, but this is a demonstration of how Git is really just a big collection of generic objects, it's not special at its core.</p>
+<p class="bestpractice">Best Practice: You should only have one project per repository. If two different projects can be maintained separately, even if they're related, you should keep each in its own repository. This simplifies collaboration as it means developers don't need to worry about additional projects in the repository they're working on, only the one project they're contributing to.</p>
+
+<h2 id="commits">Commits</h2>
+<img src="commit.svg">
+<p>Rather than keeping a copy of every version of every file in your project, Git only tracks changes to files. When you run the <code>git commit -m "&lt;message explaining your changes&gt;"</code> command, all of the changes in your workspace are saved to Git objects, one per file. A special commit object is then created, which points to all of those file objects, and to the previous commit. At any time you can change your workspace to a particular commit using <code>git checkout &lt;commit id&gt;</code>.</p>
+<p class="note">Note: You can view the chain of commits from the commit you're currently checkout out to by running <code>git log</code>. You can also use <code>git log &lt;commit id&gt;</code> to show the chain for a particular commit.</p>
+<p class="bestpractice">Best Practice: Every time you create a set of changes that make sense without additional context, you should create a new commit. Always use descriptive messages for your commits, don't just give them random names or messages like "Fixed a thing". Explain what exactly you changed. You can add multiple lines to a commit by adding additional <code>-m "&lt;message&gt;"</code> sections. Do not create commits with multiple unrelated changes; for instance, don't create a commit which adds a new feature <b>and</b> fixes a bug.</p>
+<h3 id="staging">Staging</h3>
+<p>If you ran <code>git commit</code> just now you might have noticed that it gave you an error telling you to stage your changes first. When using Git, before you can commit a change, you need to put the changes in "staging". This is done by running <code>git add &lt;path to file or directory&gt;</code>. When you run this command, Git will mark the changes in the file you passed (or every file in the directory you passed) as being in staging, and when you commit, the new commit will only include those changes, and exclude any unstaged changes.</p>
+<p>To check what files you've modified and which ones are in staging, you can run <code>git status</code> to list modified files and whether or not they've been staged. You can also use <code>git diff</code> to show the actual changes in each file. This command can also show you the changes between two commits with <code>git diff &lt;commit one&gt; &lt;commit two&gt;</code>, which is useful for reviewing changes.</p>
+<p class="bestpractice">Best Practice: Always check what files are staged with <code>git status</code> before committing, to avoid tracking unwanted files.</p>
+
+<h2 id="branches">Branches</h2>
+<p>Since every commit points to the commit before it, they form a chain of commits from the very first commit to the very last. However, there's nothing stopping two different commits from pointing to the same previous one. This creates a fork in the chain, where the two chains split off. These chains are called "branches".</p>
+<p>Usually you don't want to have to check out commits by their unique ID, so you can name your branches instead. Each named branch has a "head" which points to the latest commit in that branch. You can check out the latest commit in any branch with <code>git checkout &lt;branch name&gt;</code>. You can create named branches by checking out the commit you want the head of your branch to be at, then using <code>git branch &lt;new branch name&gt;</code>. Usually every repository will have a branch named <code>main</code> or <code>master</code> as a "good copy", and many additional branches for works in progress.</p>
+<p>When you create a new commit, the head of the branch you're currently checked out to will automatically be updated to point to that new commit. Other branches will not be affected.</p>
+<p>One of the major advantages of Git over existing VCS solutions at the time it was created is that branches are effectively free. Earlier VCS solutions would make a copy of the entire repository every time you created a new branch, which potentially took a long time and used massive amounts of disk space. With Git, the only file that is created when you create a new branch is a head file pointing to the head of that branch... and that's it. This means you can create as many branches as you want at basically no cost.</p>
+<p class="note">Note: You can see the head files in <code>&lt;repo path&gt;/.git/refs/</code>. There's one file in that directory for each branch, each having the name of that branch, and the contents of those files are just the unique IDs of the commit object at the head of that branch. Very straightforward.</p>
+<p class="bestpractice">Best Practice: As a result of how cheap branches are, it is strongly encouraged you create a branch whenever you're working on a different series of changes to a project. For instance, if you're working on feature A and feature B which don't depend on each other at all, it is good practice to create separate branches for them.</p>
+
+<h2 id="merging">Merging</h2>
+<p>Although branches are great for works in progress, eventually you will want to bring those changes into the main branch, or maybe into a different branch you're working on. This is called "merging", and it can be done in three different ways.</p>
+<h3 id="fast-forward">Fast-forward</h3>
+<p>The simplest type of merge is a fast-forward. If the source branch is exactly the same as the target but with a few extra commits, you can simply change the head of the target branch to match the head of the target branch, thus making them the same. This is the easiest and best way to merge two branches, but unfortunately it can't be used if both branches have different commits.</p>
+<h3 id="merge-commit">Merge commit</h3>
+<p>This is also a very simple way of merging two branches. All of the new commits in the source branch are combined and added to the target branch as a single commit. This is easy, but it has a major downside: It completely destroys the commit history. This includes metadata like commit messages and authors. <b>This is very bad.</b> Fortunately, there's a better way.</p>
+<p class="bestpractice">Best Practice: Do not ever use merge commits.</p>
+<h3 id="rebase">Rebase</h3>
+<p>Rebases are a little harder to understand but by far the best way to merge two branches. When performing a rebase, Git rewrites all of the new commits in the target branch so that they come after the commits in the source branch. It's called a "rebase" because it is essentially changing the base (ie common) commit in the merge. The result is that the target branch is the same as the source branch, but with the additional commits that already existed in the target branch moved so that they're at the end of the chain.</p>
+<p class="note">Note: If the source branch is the same as the target branch but with a few extra commits, then a rebase is actually exactly the same as a fast-forward, as there are no additional commits to move! This means a fast-forward merge is really just a specific example of a rebase.</p>
+<p class="bestpractice">Best Practice: You should always use a rebase or a fast-forward when merging two branches. This is because a rebase preserves the full commit history and all their associated messages and author names, whereas merge commits destroy all that information.</p>
+<p class="bestpractice">Best Practice: If trying to merge a branch you're working on into a branch other developers are working on, rebase the target branch into your own branch first, then use a fast-forward merge to bring your new commits into the target branch. This will prevent the order of commits in the target branch from changing. This will also prevent any remotes from rejecting your changes and requiring a force push.</p>
+
+<h2 id="remotes">Remotes</h2>
+<p>Even though Git is a version control tool, it was designed with collaboration in mind since day one. Git is called a "decentralized VCS". What this means is that rather than calling home to a single central server, every developer has their own repository on their local machine, which can then be synced with other repositories. In practice, there usually is a central server whose purpose is simply to allow developers to more easily share their work with each other. This is where remotes come in.</p>
+<p>A Git remote allows Git to send or retrieve objects from a remote repository (a repository on another machine). This is called "pushing" or "pulling". They are essentially equivalent to merging branches, except that one of the branches is in a different repository on a different machine. A remote can be added using <code>git remote add &lt;name&gt; &lt;url&gt;</code>. Usually the name "origin" is used for a central repository, but you can add additional remotes and name them whatever you want. The URL can be either an <code>https://</code> URL, or a user and hostname like <code>john@example.com:/home/myrepo</code>, in which case Git accesses the remote server using SSH. There's also a <code>git://</code> protocol but it's rarely used.</p>
+<p>Pushing and pulling from a remote is also very easy. To pull objects from the remote, simply use <code>git pull &lt;remote name&gt; &lt;branch name in remote&gt;</code>. Pushing to a remote branch is the same, but with <code>push</code> instead of <code>pull</code>. Git only pushes the commits for the branch you're currently checked out in; to push another branch, checkout to that branch first.</p>
+<p>You can also set the default remote for a branch to pull/push from using <code>git branch --set-upstream-to &lt;remote name&gt;/&lt;branch name in remote&gt;</code>, then you can use <code>git pull</code> and <code>git push</code> without arguments to push and pull from that remote branch automatically. If desired you can make a copy of a remote repository, creating a new repository on your computer that matches the remote one. This is done with <code>git clone &lt;url&gt;</code>. After cloning a repository, a remote named origin and upstreams for all branches will automatically be set up for you.</p>
+<p class="note">Note: GitHub is a popular host for remote Git repositories, but don't confuse it with Git itself. The Git tool runs on your own computer, whereas GitHub is a server which runs Git and a variety of other services such as ticket management, browsing Git repositories from the web, and so on. These are GitHub features unrelated to Git itself. Some other web services like GitHub include GitLab (freemium), SourceHut (?), and NotABug (open source only).</p>
+<p class="bestpractice">Best Practice: Unless a remote branch is specifically intended for you, <b>DO NOT PUSH TO IT!</b> Instead, push to a branch that <i>is</i> just for you, then ask others on your team for approval before merging it into the desired branch. Also try to keep the names of your local branches the same as the corresponding remote branches, as this makes collaboration much less confusing.</p>
+
+<h2 id="advanced-usage">Advanced usage</h2>
+<p>Below are a list of some of the tricks you can do with Git, as well as some pitfalls you might encounter. Note that there's a lot more it can do as well! If in doubt, the internet is your friend.
+<h3 id="merge-conflicts">Merge conflicts</h3>
+<p>If you are merging two branches which both have new commits which modify the same line in a file, you have what's called a "merge conflict". If this happens, Git will tell you to resolve it manually before you can complete the merge. Fixing merge conflicts may seem daunting at first but it's actually fairly easy. Git will modify the relevant files with special formatting to indicate the two different options for each line. All you have to do is use your human brain to decide what should be on that line, and replace all of Git's formatting with what you think the line should be. When you've fixed all the conflicts in a file, simply stage the file again and commit the changes. If you want to cancel the merge and get rid of the special formatting, use <code>git merge --abort</code>.</p>
+<h3 id="reset">Reset and revert</h3>
+<p>If you decide you want to undo a commit, you have two options. You can use <code>git reset &lt;commit id&gt;</code> to reset the head of a branch back to a previous commit. Doing this will automatically move all the changes in the commits between the current one and the new one into staging, so you can commit them again if desired. If you want to discard those changes completely, you can instead use <code>git reset --hard &lt;commit id&gt;</code>. This will not only reset the head of the branch, it will also completely delete any changes in the commits you have removed, as well as any unstaged changes in your workspace (!!!). Be careful with this, it can permanently destroy your work if you're not careful.</p>
+<p>When working locally to undo just the latest commit, <code>git reset</code> works well. However, sometimes you want to undo a much older commit. In this case <code>git revert</code> is the ideal tool. This will not delete the old commit like <code>git reset</code>, but rather, create a new commit which undoes all the changes created by the old commit. A revert commit can be created with <code>git revert &lt;commit id&gt;</code>.
+<p class="bestpractice">Best Practice: Never reset commits which have already been pushed to a remote. If you do this, you will end up needing to use <code>git push --force</code> or the remote will refuse to accept your changes.</p>
+<h3 id="commit-names">Other names for commits</h3>
+<p>As mentioned previously, you can refer to an individual commit using its unique ID, or if it's at the head of a branch, you can refer to it using the branch name. There are some other names you can use too, though. To refer to the commit at the head of the currently checked out branch, you can use <code>HEAD</code>. You can also refer to the commit immediately before the head with <code>HEAD~2</code>, and of course any other number works as well.</p>
+<p>Some commands like <code>git revert</code> also accept ranges of commits. For example you, <code>HEAD~2..HEAD~4</code> refers to the three commits immediately before the head of the branch. This works with commit IDs and branch names too.</p>
+<h3 id="gitignore">.gitignore</h3>
+<p>Depending on the project you're working on, there may be files in your workspace which you don't want Git to track (such as <code>.swp</code> files from Vim, <code>.o</code> files from a C/C++ compiler, etc). You can choose to simply not stage those files with <code>git add</code>, but there's a better way: You can add that file's name (or a directory full of files) to a file named <code>&lt;your repo path&gt;/.gitignore</code>, one per line. This will cause Git to completely ignore any of the listed files. This file also supports negations and wildcards.</p>
+<p>Note that Git only tracks files, not directories. This means that if a directory has no files in it, Git will never track it. If you really need to track an empty directory in your Git repository, you can create an empty file in it with a name like <code>.keep</code> so that Git tracks that empty file (and by extension, the directory itself).</p>
+<p class="bestpractice">Best Practice: Never commit cache files or reproducible files to a Git repository. For instance, you should never commit compiled copies of your program, backup files, cache files from your text editor or IDE, thumbnail files from your file browser, and so on. This pollutes the repository with files that change frequently and yet are completely irrelevant to the project, creating tons of merge conflicts for no reason.</p>
+
+<h2 id="glossary">Glossary</h2>
+<ul>
+<li><b>Branch</b>: A named chain of commits.</li>
+<li><b>Commit</b>: An object representing a collection of changes, pointing to its predecessor in a chain of many.</li>
+<li><b>Fast-forward</b>: A type of merge where a branch is changed to simply point to a new head.</li>
+<li><b>Head</b>: The latest commit in a branch.</li>
+<li><b>Merge commit</b>: A type of merge where commit history is discarded and combined into a single new commit.</li>
+<li><b>Merge</b>: To copy changes from one branch into another.</li>
+<li><b>Rebase</b>: A type of merge where commits are rewritten to be placed after others.</li>
+<li><b>Remote</b>: A repository on another machine or server.</li>
+<li><b>Repository</b>: A collection of Git objects associated with a project.</li>
+<li><b>Staging</b>: The collection of changes which will be included when you create a new commit.</li>
+<li><b>Upstream</b>: The default remote branch/repository corresponding to a given local branch/repository.</li>
+<li><b>VCS</b>: Version control system. A tool which allows you to manage track and manage changes to a project.</li>
+</ul>
+
+</body>
+</html>
